@@ -1,0 +1,4 @@
+LIBRARY awesome_vr_native
+EXPORTS
+    UnityRenderEvent=UnityRenderEvent@4
+    UnitySetGraphicsDevice=UnitySetGraphicsDevice@12

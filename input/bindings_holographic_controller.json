@@ -1,0 +1,176 @@
+{
+  "controller_type": "holographic_controller",
+  "name": "V-AaaaaR! - holographic_controller",
+  "description": "Motion gestures, menus, steering, spray and parachute",
+  "bindings": {
+    "/actions/awesome": {
+      "sources": [
+        {
+          "path": "/user/hand/left/input/trigger",
+          "mode": "trigger",
+          "inputs": {
+            "pull": {
+              "output": "/actions/awesome/in/left_trigger"
+            },
+            "click": {
+              "output": "/actions/awesome/in/left_select"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/grip",
+          "mode": "button",
+          "inputs": {
+            "click": {
+              "output": "/actions/awesome/in/left_grab"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/joystick",
+          "mode": "joystick",
+          "inputs": {
+            "position": {
+              "output": "/actions/awesome/in/left_stick"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/application_menu",
+          "mode": "button",
+          "inputs": {
+            "click": {
+              "output": "/actions/awesome/in/left_back"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/trackpad",
+          "mode": "dpad",
+          "inputs": {
+            "north": {
+              "output": "/actions/awesome/in/left_thumbsup"
+            },
+            "south": {
+              "output": "/actions/awesome/in/left_flipoff"
+            },
+            "east": {
+              "output": "/actions/awesome/in/left_espresso"
+            },
+            "west": {
+              "output": "/actions/awesome/in/left_parachute"
+            }
+          },
+          "parameters": {
+            "sub_mode": "click",
+            "deadzone_pct": "50",
+            "overlap_pct": "0"
+          }
+        },
+        {
+          "path": "/user/hand/right/input/trigger",
+          "mode": "trigger",
+          "inputs": {
+            "pull": {
+              "output": "/actions/awesome/in/right_trigger"
+            },
+            "click": {
+              "output": "/actions/awesome/in/right_select"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/grip",
+          "mode": "button",
+          "inputs": {
+            "click": {
+              "output": "/actions/awesome/in/right_grab"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/joystick",
+          "mode": "joystick",
+          "inputs": {
+            "position": {
+              "output": "/actions/awesome/in/right_stick"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/joystick",
+          "mode": "button",
+          "inputs": {
+            "click": {
+              "output": "/actions/awesome/in/right_recenter"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/application_menu",
+          "mode": "button",
+          "inputs": {
+            "click": {
+              "output": "/actions/awesome/in/right_pause"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/trackpad",
+          "mode": "dpad",
+          "inputs": {
+            "north": {
+              "output": "/actions/awesome/in/right_spray"
+            },
+            "center": {
+              "output": "/actions/awesome/in/right_jump"
+            }
+          },
+          "parameters": {
+            "sub_mode": "click",
+            "deadzone_pct": "50",
+            "overlap_pct": "0"
+          }
+        }
+      ],
+      "poses": [
+        {
+          "path": "/user/hand/left/pose/raw",
+          "output": "/actions/awesome/in/left_pose"
+        },
+        {
+          "path": "/user/hand/left/pose/tip",
+          "output": "/actions/awesome/in/left_aim"
+        },
+        {
+          "path": "/user/hand/right/pose/raw",
+          "output": "/actions/awesome/in/right_pose"
+        },
+        {
+          "path": "/user/hand/right/pose/tip",
+          "output": "/actions/awesome/in/right_aim"
+        }
+      ],
+      "skeleton": [
+        {
+          "path": "/user/hand/left/input/skeleton/left",
+          "output": "/actions/awesome/in/left_skeleton"
+        },
+        {
+          "path": "/user/hand/right/input/skeleton/right",
+          "output": "/actions/awesome/in/right_skeleton"
+        }
+      ],
+      "haptics": [
+        {
+          "path": "/user/hand/left/output/haptic",
+          "output": "/actions/awesome/out/left_haptic"
+        },
+        {
+          "path": "/user/hand/right/output/haptic",
+          "output": "/actions/awesome/out/right_haptic"
+        }
+      ]
+    }
+  }
+}

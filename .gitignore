@@ -1,0 +1,9 @@
+/vendor/
+/build/
+/dist/
+/logs/
+/backups/
+/install-manifest.json
+/runtime/
+__pycache__/
+/assets/*.glb

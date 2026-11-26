@@ -1,0 +1,260 @@
+{
+  "action_sets": [
+    {
+      "name": "/actions/awesome",
+      "usage": "single"
+    }
+  ],
+  "actions": [
+    {
+      "name": "/actions/awesome/in/left_select",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_grab",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_thumbsup",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_flipoff",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_jump",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_parachute",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_espresso",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_back",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_pause",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_recenter",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_spray",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_trigger",
+      "type": "vector1",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_grip",
+      "type": "vector1",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_stick",
+      "type": "vector2",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_pose",
+      "type": "pose",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_aim",
+      "type": "pose",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/left_skeleton",
+      "type": "skeleton",
+      "requirement": "optional",
+      "skeleton": "/skeleton/hand/left"
+    },
+    {
+      "name": "/actions/awesome/out/left_haptic",
+      "type": "vibration",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_select",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_grab",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_thumbsup",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_flipoff",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_jump",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_parachute",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_espresso",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_back",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_pause",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_recenter",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_spray",
+      "type": "boolean",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_trigger",
+      "type": "vector1",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_grip",
+      "type": "vector1",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_stick",
+      "type": "vector2",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_pose",
+      "type": "pose",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_aim",
+      "type": "pose",
+      "requirement": "optional"
+    },
+    {
+      "name": "/actions/awesome/in/right_skeleton",
+      "type": "skeleton",
+      "requirement": "optional",
+      "skeleton": "/skeleton/hand/right"
+    },
+    {
+      "name": "/actions/awesome/out/right_haptic",
+      "type": "vibration",
+      "requirement": "optional"
+    }
+  ],
+  "default_bindings": [
+    {
+      "controller_type": "frame_controller",
+      "binding_url": "bindings_frame_controller.json"
+    },
+    {
+      "controller_type": "oculus_touch",
+      "binding_url": "bindings_oculus_touch.json"
+    },
+    {
+      "controller_type": "knuckles",
+      "binding_url": "bindings_knuckles.json"
+    },
+    {
+      "controller_type": "vive_controller",
+      "binding_url": "bindings_vive_controller.json"
+    },
+    {
+      "controller_type": "holographic_controller",
+      "binding_url": "bindings_holographic_controller.json"
+    },
+    {
+      "controller_type": "generic",
+      "binding_url": "bindings_generic.json"
+    }
+  ],
+  "localization": [
+    {
+      "language_tag": "en_US",
+      "/actions/awesome": "V-AaaaaR!",
+      "/actions/awesome/in/left_select": "Left Select",
+      "/actions/awesome/in/left_grab": "Left Grab",
+      "/actions/awesome/in/left_thumbsup": "Left Thumbsup",
+      "/actions/awesome/in/left_flipoff": "Left Flipoff",
+      "/actions/awesome/in/left_jump": "Left Jump",
+      "/actions/awesome/in/left_parachute": "Left Parachute",
+      "/actions/awesome/in/left_espresso": "Left Espresso",
+      "/actions/awesome/in/left_back": "Left Back",
+      "/actions/awesome/in/left_pause": "Left Pause",
+      "/actions/awesome/in/left_recenter": "Left Recenter",
+      "/actions/awesome/in/left_spray": "Left Spray",
+      "/actions/awesome/in/left_trigger": "Left Trigger",
+      "/actions/awesome/in/left_grip": "Left Grip",
+      "/actions/awesome/in/left_stick": "Left Stick",
+      "/actions/awesome/in/left_pose": "Left Pose",
+      "/actions/awesome/in/left_aim": "Left Aim",
+      "/actions/awesome/in/left_skeleton": "Left Skeleton",
+      "/actions/awesome/out/left_haptic": "Left Haptic",
+      "/actions/awesome/in/right_select": "Right Select",
+      "/actions/awesome/in/right_grab": "Right Grab",
+      "/actions/awesome/in/right_thumbsup": "Right Thumbsup",
+      "/actions/awesome/in/right_flipoff": "Right Flipoff",
+      "/actions/awesome/in/right_jump": "Right Jump",
+      "/actions/awesome/in/right_parachute": "Right Parachute",
+      "/actions/awesome/in/right_espresso": "Right Espresso",
+      "/actions/awesome/in/right_back": "Right Back",
+      "/actions/awesome/in/right_pause": "Right Pause",
+      "/actions/awesome/in/right_recenter": "Right Recenter",
+      "/actions/awesome/in/right_spray": "Right Spray",
+      "/actions/awesome/in/right_trigger": "Right Trigger",
+      "/actions/awesome/in/right_grip": "Right Grip",
+      "/actions/awesome/in/right_stick": "Right Stick",
+      "/actions/awesome/in/right_pose": "Right Pose",
+      "/actions/awesome/in/right_aim": "Right Aim",
+      "/actions/awesome/in/right_skeleton": "Right Skeleton",
+      "/actions/awesome/out/right_haptic": "Right Haptic"
+    }
+  ]
+}
