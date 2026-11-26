@@ -43,3 +43,5 @@ The build downloads BepInEx, UnityDoorstop, and OpenVR as needed and writes the 
 See [third-party notices](THIRD-PARTY-NOTICES.txt) for dependency licenses and model credits.
 
 This mod was programmed with AI assistance.
+
+You should also check out stephen304's VR mod [here](https://github.com/stephen304/AwesomeForTheXR)!
