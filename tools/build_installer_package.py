@@ -32,7 +32,8 @@ add('awesome_vr/runtime/openvr_api.dll', project/'vendor/openvr-1.26.7/openvr_ap
 add('awesome_vr/runtime/LICENSE.txt', project/'LICENSE')
 add('awesome_vr/runtime/THIRD-PARTY-NOTICES.txt', project/'THIRD-PARTY-NOTICES.txt')
 shared_loader = (project/'vendor/bepinex/winhttp.dll').read_bytes()
-manifest = {'Version': 1, 'Product': 'awesome_vr', 'Files': specs}
+base_game_files = (project/'installer/base-game-files.txt').read_text(encoding='utf-8').splitlines()
+manifest = {'Version': 1, 'Product': 'awesome_vr', 'Files': specs, 'BaseGameFiles': base_game_files}
 
 def write_zip(path, members):
     with zipfile.ZipFile(path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:

@@ -5,6 +5,7 @@ static VRActionSetHandle_t inputSet;
 static VRActionHandle_t inputDigital[2][11], inputAnalog[2][3], inputPose[2], inputAim[2], inputSkeleton[2], inputHaptic[2];
 static VRInputValueHandle_t inputSource[2];
 static int inputError = -1;
+enum { INPUT_POSE_VALID = 1, INPUT_STICK_ACTIVE = 2 };
 
 API int __cdecl AVR_HasInputFocus(void) {
     return active && systemVR && systemVR->IsInputAvailable() && !systemVR->IsSteamVRDrawingControllers() && !systemVR->ShouldApplicationPause();
@@ -73,13 +74,16 @@ API int __cdecl AVR_ReadInput(int role, float *values, int *flags, float *matrix
         memset(&data, 0, sizeof(data));
         if (!inputVR->GetAnalogActionData(inputAnalog[hand][i], &data, sizeof(data), inputSource[hand]) && data.bActive) {
             values[i] = data.x;
-            if (i == 2) values[3] = data.y;
+            if (i == 2) {
+                values[3] = data.y;
+                flags[1] |= INPUT_STICK_ACTIVE;
+            }
         }
     }
     InputPoseActionData_t pose;
     memset(&pose, 0, sizeof(pose));
     if (!inputVR->GetPoseActionDataForNextFrame(inputPose[hand], ETrackingUniverseOrigin_TrackingUniverseStanding, &pose, sizeof(pose), inputSource[hand]) && pose.bActive && ValidPose(&pose.pose)) {
-        flags[1] = 1;
+        flags[1] |= INPUT_POSE_VALID;
         memcpy(matrix, &pose.pose.mDeviceToAbsoluteTracking, sizeof(HmdMatrix34_t));
     }
     InputSkeletalActionData_t skeleton;
@@ -94,7 +98,7 @@ API int __cdecl AVR_ReadInput(int role, float *values, int *flags, float *matrix
             InputPoseActionData_t skeletonPose;
             memset(&skeletonPose, 0, sizeof(skeletonPose));
             if (!inputVR->GetPoseActionDataForNextFrame(inputSkeleton[hand], ETrackingUniverseOrigin_TrackingUniverseStanding, &skeletonPose, sizeof(skeletonPose), 0) && skeletonPose.bActive && ValidPose(&skeletonPose.pose)) {
-                flags[1] = 1;
+                flags[1] |= INPUT_POSE_VALID;
                 memcpy(matrix, &skeletonPose.pose.mDeviceToAbsoluteTracking, sizeof(HmdMatrix34_t));
             }
             if (!inputVR->GetSkeletalTrackingLevel(inputSkeleton[hand], &level)) flags[3] = (int)level;

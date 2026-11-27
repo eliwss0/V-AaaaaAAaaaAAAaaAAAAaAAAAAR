@@ -15,13 +15,14 @@ namespace AwesomeVr
     internal sealed class VRHandInput
     {
         internal readonly float[] Values = new float[9], Pose = new float[12], AimPose = new float[12], Bones = new float[93], GripBones = new float[93], Curls = new float[5];
+        internal const int PoseValid = 1, StickActive = 2;
         internal readonly int[] Flags = new int[4];
         internal bool Tracked, Skeleton, GripSkeleton, Grip, GripDown, Select, SelectDown, CanHeld, ShotHeld;
         internal uint Buttons, Down;
         internal bool ReleaseRequired = true;
         internal CrowdGesture Gesture, ButtonGesture;
         internal bool AimTracked, HasFingerTracking;
-        internal bool InParachuteReach, PhysicalGrip;
+        internal bool InParachuteReach, PhysicalGrip, HasStickInput;
         internal Vector3 Position;
         internal Quaternion Rotation, AimRotation;
         internal readonly GestureLatch GestureFilter = new GestureLatch();
@@ -165,17 +166,18 @@ namespace AwesomeVr
                 Array.Clear(hand.Flags, 0, hand.Flags.Length);
                 Array.Clear(hand.Values, 0, hand.Values.Length);
                 bool modern = motionInput && updateError == 0 && NativeVR.AVR_ReadInput(i+1, hand.Values, hand.Flags, hand.Pose, hand.Bones) != 0;
-                hand.Tracked = motionInput && (hand.Flags[1] != 0 || NativeVR.AVR_CopyPose(i+1, hand.Pose) != 0);
+                hand.Tracked = motionInput && ((hand.Flags[1] & VRHandInput.PoseValid) != 0 ||
+                    NativeVR.AVR_CopyPose(i+1, hand.Pose) != 0);
+                hand.HasStickInput = modern && (hand.Flags[1] & VRHandInput.StickActive) != 0;
                 hand.Buttons = modern ? (uint)hand.Flags[0] : 0;
-                hand.PhysicalGrip = hand.IsHeld(HandAction.Grab) || hand.Values[1] > (hand.PhysicalGrip ? .25f : .42f);
-                if (!hand.Tracked) { hand.Buttons = 0; Array.Clear(hand.Values, 0, hand.Values.Length); }
-                if (!hand.Tracked) hand.ReleaseRequired = true;
+                if (!modern) hand.ReleaseRequired = true;
                 if (hand.ReleaseRequired)
                 {
                     bool released = hand.Buttons == 0 && hand.Values[0] < .35f && hand.Values[1] < .35f;
                     hand.Buttons = 0; hand.Values[0] = hand.Values[1] = 0;
-                    if (hand.Tracked && released) hand.ReleaseRequired = false;
+                    if (modern && released) hand.ReleaseRequired = false;
                 }
+                hand.PhysicalGrip = hand.IsHeld(HandAction.Grab) || hand.Values[1] > (hand.PhysicalGrip ? .25f : .42f);
                 hand.Down = hand.Buttons & ~old;
                 hand.ButtonGesture = CrowdGesture.None;
                 hand.Grip = hand.Tracked && (hand.IsHeld(HandAction.Grab) || hand.Values[1] > (oldGrip ? .35f : .6f));
@@ -287,7 +289,7 @@ namespace AwesomeVr
         internal float ReadSnapTurn()
         {
             float stick = Hands[1].Stick.x;
-            if (!Gameplay || !Hands[1].Tracked || !horizontalLook || Mathf.Abs(stick) <= .75f)
+            if (!Gameplay || !Hands[1].HasStickInput || !horizontalLook || Mathf.Abs(stick) <= .75f)
             {
                 snapDirection = 0;
                 return 0;

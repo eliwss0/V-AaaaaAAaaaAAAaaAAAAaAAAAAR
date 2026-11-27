@@ -47,6 +47,11 @@ class Package:
             self.index = json.loads(archive.read("manifest.json"))
             if self.index.get("Version") != 1 or self.index.get("Product") != "awesome_vr":
                 raise ValueError("Unsupported package")
+            base_game_files = self.index.get("BaseGameFiles")
+            if not isinstance(base_game_files, list) or not base_game_files:
+                raise ValueError("Missing base game file list")
+            for name in base_game_files:
+                relative_path(name)
             seen = set()
             for spec in self.index["Files"]:
                 name = spec["Relative"]
@@ -276,21 +281,56 @@ class Installer:
     def check_game(self):
         if not self.target("Awesome.exe").is_file() or not self.target("Awesome_Data/Managed/Assembly-CSharp.dll").is_file():
             raise ValueError("Select the Windows game folder containing Awesome.exe and Awesome_Data. For a Linux installation, select Proton in Steam's Compatibility settings to obtain the Windows build.")
-    def other_mods(self):
-        found = self.target("winhttp.dll").exists()
-        for name in ("BepInEx/plugins", "BepInEx/patchers"):
+    def other_mods(self, *directories):
+        own_plugin = self.target("BepInEx/plugins/awesome_vr/awesome_vr.dll")
+        for name in directories:
             base = self.target(name)
             if not base.exists():
                 continue
             for directory, dirs, files in os.walk(base, followlinks=False):
                 for part in dirs + files:
                     path = self.target((Path(directory) / part).relative_to(self.game).as_posix())
-                    if path.suffix.lower() == ".dll" and path != self.target("BepInEx/plugins/awesome_vr/awesome_vr.dll"):
-                        found = True
-        return found
+                    if path.is_file() and (path.suffix.lower() == ".asi" or
+                                           (path.suffix.lower() == ".dll" and path != own_plugin)):
+                        return True
+        return False
+
+    def check_unexpected_files(self):
+        expected = set(self.package.index["BaseGameFiles"])
+        expected.update(("backup/.proton-override", "BepInEx/LogOutput.log",
+                         "BepInEx/cache/chainloader_typeloader.dat",
+                         "BepInEx/cache/harmony_interop_cache.dat", "BepInEx/config/awesome_vr.cfg.tmp"))
+        for name in self.package.files:
+            expected.update((name, "backup/" + name, "backup/.absent/" + name))
+        if not (self.target("backup/.absent/version.dll").is_file() or self.target("backup/version.dll").is_file()):
+            expected.discard("version.dll")
+
+        generated_log = re.compile(
+            r"(awesome_vr/logs/awesome_vr_log_[0-9]{8}_[0-9]{6}_([0-9]{7}|[0-9]{3}_[0-9]+)\.log"
+            r"|BepInEx/LogOutput\.log\.[0-9]+|preloader_[0-9]{8}_[0-9]{6}_[0-9]{3}\.log)")
+        unexpected = []
+
+        def raise_walk_error(error):
+            raise error
+
+        for directory, dirs, files in os.walk(self.game, onerror=raise_walk_error, followlinks=False):
+            for name in dirs + files:
+                path = Path(directory) / name
+                relative = path.relative_to(self.game).as_posix()
+                if path.is_symlink() or (name in files and
+                        (not path.is_file() or (relative not in expected and not generated_log.fullmatch(relative)))):
+                    unexpected.append(relative)
+        if unexpected:
+            details = "\n".join(sorted(unexpected)[:12])
+            if len(unexpected) > 12:
+                details += "\nAnd " + str(len(unexpected) - 12) + " more."
+            raise ValueError("Setup found unexpected files in the game folder. "
+                             "Uninstall other mods before installing V-AaaaaAAaaaAAAaaAAAAaAAAAAR!!!. "
+                             "Move any remaining unexpected files out of the game folder and retry.\n\n" + details)
 
     def install(self, prefix):
         self.check_game()
+        self.check_unexpected_files()
         registry = safe_path(Path(prefix).resolve(strict=True), "user.reg")
         original = registry.read_text(encoding="utf-8")
         updated = registry_update(original)
@@ -335,7 +375,7 @@ class Installer:
             if updated != original:
                 write_registry(registry, updated)
             marker.unlink()
-        shared = self.other_mods()
+        shared = self.other_mods("BepInEx/plugins", "BepInEx/patchers") or self.target("winhttp.dll").is_file()
         for spec in self.package.index["Files"]:
             self.restore_file(spec["Relative"], spec.get("Mutable"), shared)
         return "Restored to base game"
@@ -477,6 +517,7 @@ def main():
         with setup_lock(installer.game), prefix_lock(prefix):
             ensure_idle(prefix)
             if action == "check":
+                installer.check_unexpected_files()
                 registry_update(safe_path(prefix, "user.reg").read_text(encoding="utf-8"))
                 message = "Game folder and Proton prefix found. Runtime/headset compatibility has not been verified."
             else:

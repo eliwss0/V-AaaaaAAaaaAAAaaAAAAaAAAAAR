@@ -100,15 +100,14 @@ namespace AwesomeVr
 
     internal sealed class PullLatch
     {
-        private const double TrackingGraceSeconds = .30;
-        private const double GrabWindowSeconds = .22;
+        private const double GrabWindowSeconds = .5;
         private const double HoldTimeoutSeconds = 2;
-        private const float PullDistanceMeters = .17f;
+        private const float PullDistanceMeters = .15f;
 
         private bool armed, gripHeld;
         private float grabHeight, reachHeight;
         private double pressedAt = double.NegativeInfinity, reachedAt = double.NegativeInfinity;
-        private double trackedAt = double.NegativeInfinity, armedAt;
+        private double armedAt;
         internal bool Armed { get { return armed; } }
 
         internal bool Update(bool available, bool tracked, bool grip, bool inReach, float height, double now)
@@ -119,13 +118,12 @@ namespace AwesomeVr
                 gripHeld = grip;
                 return false;
             }
-            if (now - trackedAt > TrackingGraceSeconds || now - armedAt > HoldTimeoutSeconds) armed = false;
+            if (now - armedAt > HoldTimeoutSeconds) armed = false;
             if (grip && !gripHeld) pressedAt = now;
-            if (tracked || grip) gripHeld = grip;
-            if (!tracked) return false;
-            trackedAt = now;
-            if (inReach) { reachedAt = now; reachHeight = height; }
+            gripHeld = grip;
+            if (tracked && inReach) { reachedAt = now; reachHeight = height; }
             if (!grip) { armed = false; pressedAt = double.NegativeInfinity; return false; }
+            if (!tracked) return false;
             if (!armed && now - pressedAt <= GrabWindowSeconds && now - reachedAt <= GrabWindowSeconds)
             {
                 armed = true;
@@ -142,7 +140,7 @@ namespace AwesomeVr
         private void Clear()
         {
             armed = false;
-            pressedAt = reachedAt = trackedAt = double.NegativeInfinity;
+            pressedAt = reachedAt = double.NegativeInfinity;
         }
     }
 

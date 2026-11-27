@@ -51,6 +51,8 @@ namespace AwesomeVr
                     transpiler: new HarmonyMethod(typeof(VRGameHooks), "RouteMovementStick"));
                 harmony.Patch(AccessTools.Method(typeof(Player), "FixedUpdate"),
                     transpiler: new HarmonyMethod(typeof(VRGameHooks), "RouteSteeringHeading"));
+                harmony.Patch(AccessTools.Method(typeof(Parachute), "Deploy"),
+                    transpiler: new HarmonyMethod(typeof(VRGameHooks), "UseOriginalVrParachuteSteering"));
                 Patch(AccessTools.Method(typeof(Player), "DeployGraffitiGesture"), "BeforeSpray", "AfterSpray");
                 Patch(AccessTools.Method(typeof(Player), "EmitGraffitiParticles"), null, "AfterEmitGraffitiParticles");
                 Patch(AccessTools.Method(typeof(Player), "TagGraffiti"), "TagAtController", null);
@@ -195,11 +197,32 @@ namespace AwesomeVr
             return code;
         }
 
+        private static IEnumerable<CodeInstruction> UseOriginalVrParachuteSteering(IEnumerable<CodeInstruction> instructions)
+        {
+            var code = new List<CodeInstruction>(instructions);
+            FieldInfo legacyVr = AccessTools.Field(typeof(Options), "isVRSupportEnabled");
+            FieldInfo sideways = AccessTools.Field(typeof(GameInput), "adFactor");
+            FieldInfo forward = AccessTools.Field(typeof(GameInput), "wsFactor");
+            for (int i = 0; i + 7 < code.Count; ++i)
+            {
+                if (code[i].opcode != OpCodes.Ldsfld || !Equals(code[i].operand, legacyVr) ||
+                    (code[i + 1].opcode != OpCodes.Brfalse && code[i + 1].opcode != OpCodes.Brfalse_S) ||
+                    code[i + 4].opcode != OpCodes.Stfld || !Equals(code[i + 4].operand, sideways) ||
+                    code[i + 7].opcode != OpCodes.Stfld || !Equals(code[i + 7].operand, forward)) continue;
+
+                code[i].opcode = OpCodes.Ldc_I4_1;
+                code[i].operand = null;
+                return code;
+            }
+            throw new InvalidOperationException("Could not find the original VR parachute steering in Parachute.Deploy.");
+        }
+
         private static Vector3 RotateSteering(Quaternion playerRotation, Vector3 movement)
         {
             Vector3 worldMovement = playerRotation * movement;
             VRControls input = VRControls.Current;
-            if (input == null || !input.HasHeadsetHeading || !input.Gameplay) return worldMovement;
+            if (input == null || !input.HasHeadsetHeading || !input.Gameplay ||
+                (Parachute.singleton != null && Parachute.singleton.deployed)) return worldMovement;
             float yaw = Mathf.DeltaAngle(playerRotation.eulerAngles.y, input.HeadsetYaw);
             return Quaternion.AngleAxis(yaw, Vector3.up) * worldMovement;
         }
@@ -280,7 +303,7 @@ namespace AwesomeVr
             if (!VRModSettings.UseGamepad && input != null && !input.MenuMode)
             {
                 input.Sample();
-                if (input.Focused && input.Hands[0].Tracked) return input.ReadSteering();
+                if (input.Hands[0].HasStickInput) return input.ReadSteering();
             }
             return GamepadDevice();
         }

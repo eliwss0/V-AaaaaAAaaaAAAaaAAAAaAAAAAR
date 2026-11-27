@@ -26,4 +26,6 @@ The installer requires Python 3.9 or newer and either `kdialog` or `zenity`.
 
 Close the game before running the installer.
 
+Uninstall other mods before installing. Setup stops and lists any unexpected files in the game folder.
+
 To upgrade, run the new installer and choose Install. You can install directly over the older mod version. To remove the mod, choose Uninstall. This removes mod files and restores the game to flat only.

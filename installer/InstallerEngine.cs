@@ -8,6 +8,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace AwesomeVr_setup
@@ -25,6 +26,7 @@ namespace AwesomeVr_setup
         [DataMember] internal int Version { get; set; }
         [DataMember] internal string Product { get; set; }
         [DataMember] internal List<FileSpec> Files { get; set; }
+        [DataMember] internal List<string> BaseGameFiles { get; set; }
     }
 
     internal sealed class Payload
@@ -42,7 +44,8 @@ namespace AwesomeVr_setup
                 using (Stream stream = index.Open())
                     Index = (PackageIndex)new DataContractJsonSerializer(typeof(PackageIndex)).ReadObject(stream);
                 if (Index == null || Index.Version != 1 || Index.Product != "awesome_vr" ||
-                    Index.Files == null) throw new InvalidDataException("Invalid package catalog.");
+                    Index.Files == null || Index.BaseGameFiles == null || Index.BaseGameFiles.Count == 0 ||
+                    Index.BaseGameFiles.Any(path => !Installer.SafeRelative(path))) throw new InvalidDataException("Invalid package catalog.");
                 foreach (FileSpec spec in Index.Files)
                 {
                     if (spec == null || !Installer.SafeRelative(spec.Relative) || !Installer.IsPayloadPath(spec.Relative) ||
@@ -152,9 +155,10 @@ namespace AwesomeVr_setup
                 throw new InvalidOperationException("Close the game before installing or uninstalling.");
         }
 
-        private bool OtherMods()
+        private bool OtherMods(params string[] directories)
         {
-            foreach (string relative in new[] { "BepInEx/plugins", "BepInEx/patchers" })
+            string ownPlugin = PathFor("BepInEx/plugins/awesome_vr/awesome_vr.dll");
+            foreach (string relative in directories)
             {
                 string directory = PathFor(relative);
                 if (!Directory.Exists(directory)) continue;
@@ -167,19 +171,67 @@ namespace AwesomeVr_setup
                         FileAttributes attr = File.GetAttributes(entry);
                         if ((attr & FileAttributes.ReparsePoint) != 0) throw new IOException("A mod directory contains a link: " + entry);
                         if ((attr & FileAttributes.Directory) != 0) { pending.Push(entry); continue; }
-                        if (entry.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) &&
-                            !entry.Equals(PathFor("BepInEx/plugins/awesome_vr/awesome_vr.dll"), StringComparison.OrdinalIgnoreCase)) return true;
+                        string extension = Path.GetExtension(entry);
+                        if (extension.Equals(".asi", StringComparison.OrdinalIgnoreCase) ||
+                            (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase) &&
+                             !entry.Equals(ownPlugin, StringComparison.OrdinalIgnoreCase))) return true;
                     }
                 }
             }
             return false;
         }
 
+        private void CheckUnexpectedFiles()
+        {
+            var expected = new HashSet<string>(payload.Index.BaseGameFiles, StringComparer.OrdinalIgnoreCase)
+            {
+                "backup/.proton-override",
+                "BepInEx/LogOutput.log",
+                "BepInEx/cache/chainloader_typeloader.dat",
+                "BepInEx/cache/harmony_interop_cache.dat",
+                "BepInEx/config/awesome_vr.cfg.tmp"
+            };
+            foreach (FileSpec file in payload.Index.Files)
+            {
+                expected.Add(file.Relative);
+                expected.Add("backup/" + file.Relative);
+                expected.Add("backup/.absent/" + file.Relative);
+            }
+            if (!File.Exists(PathFor("backup/.absent/version.dll")) && !File.Exists(PathFor("backup/version.dll")))
+                expected.Remove("version.dll");
+
+            var unexpected = new List<string>();
+            var pending = new Stack<string>();
+            pending.Push(root);
+            while (pending.Count > 0)
+            {
+                foreach (string entry in Directory.EnumerateFileSystemEntries(pending.Pop()))
+                {
+                    string relative = entry.Substring(root.Length + 1).Replace('\\', '/');
+                    FileAttributes attributes = File.GetAttributes(entry);
+                    if ((attributes & FileAttributes.ReparsePoint) != 0) unexpected.Add(relative);
+                    else if ((attributes & FileAttributes.Directory) != 0) pending.Push(entry);
+                    else if (!expected.Contains(relative) && !GeneratedLog.IsMatch(relative)) unexpected.Add(relative);
+                }
+            }
+            if (unexpected.Count == 0) return;
+            unexpected.Sort(StringComparer.OrdinalIgnoreCase);
+            string details = string.Join(Environment.NewLine, unexpected.Take(12));
+            if (unexpected.Count > 12) details += Environment.NewLine + "And " + (unexpected.Count - 12) + " more.";
+            throw new InvalidOperationException("Setup found unexpected files in the game folder. Uninstall other mods before installing V-AaaaaAAaaaAAAaaAAAAaAAAAAR!!!. Move any remaining unexpected files out of the game folder and retry." +
+                Environment.NewLine + Environment.NewLine + details);
+        }
+
+        private static readonly Regex GeneratedLog = new Regex(
+            @"^(awesome_vr/logs/awesome_vr_log_[0-9]{8}_[0-9]{6}_([0-9]{7}|[0-9]{3}_[0-9]+)\.log|BepInEx/LogOutput\.log\.[0-9]+|preloader_[0-9]{8}_[0-9]{6}_[0-9]{3}\.log)$",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
         internal void Install()
         {
             CheckTarget();
             using (SetupLock setupLock = new SetupLock("Local\\awesome_vr-" + Hash(Encoding.UTF8.GetBytes(root.ToUpperInvariant()))))
             {
+                CheckUnexpectedFiles();
                 string backupRoot = PathFor("backup");
                 Directory.CreateDirectory(backupRoot);
                 foreach (FileSpec spec in payload.Index.Files.OrderBy(x => x.Relative.Equals("version.dll", StringComparison.OrdinalIgnoreCase) ? 1 : 0))
@@ -213,7 +265,7 @@ namespace AwesomeVr_setup
             CheckTarget();
             using (SetupLock setupLock = new SetupLock("Local\\awesome_vr-" + Hash(Encoding.UTF8.GetBytes(root.ToUpperInvariant()))))
             {
-                bool shared = OtherMods() || File.Exists(PathFor("winhttp.dll"));
+                bool shared = OtherMods("BepInEx/plugins", "BepInEx/patchers") || File.Exists(PathFor("winhttp.dll"));
                 foreach (FileSpec spec in payload.Index.Files)
                     RestoreFile(spec.Relative, spec.Mutable, shared);
                 report("Restored to base game");
